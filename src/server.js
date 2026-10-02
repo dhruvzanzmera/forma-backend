@@ -15,7 +15,7 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    server = app.listen(config.port, () => {
+    server = app.listen(config.port, '0.0.0.0', () => {
       console.log(`===============================================`);
       console.log(`  E-Commerce API Server Running                `);
       console.log(`  Environment: ${config.env}                   `);

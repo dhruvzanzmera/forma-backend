@@ -1,8 +1,21 @@
 const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs');
 
-// Load .env
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const rootDir = path.resolve(__dirname, '../../');
+const currentEnv = process.env.NODE_ENV || 'development';
+
+// 1. Load environment-specific file (.env.production or .env.development) if present
+const specificEnvPath = path.resolve(rootDir, `.env.${currentEnv}`);
+if (fs.existsSync(specificEnvPath)) {
+  dotenv.config({ path: specificEnvPath });
+}
+
+// 2. Load root .env as fallback / default (will not overwrite already set variables)
+const defaultEnvPath = path.resolve(rootDir, '.env');
+if (fs.existsSync(defaultEnvPath)) {
+  dotenv.config({ path: defaultEnvPath });
+}
 
 const config = {
   env: process.env.NODE_ENV || 'development',
@@ -14,7 +27,7 @@ const config = {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   },
   
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
+  clientUrl: (process.env.CLIENT_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   
   admin: {
     name: process.env.ADMIN_NAME || 'Super Admin',

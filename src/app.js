@@ -17,13 +17,39 @@ app.use(helmet({
 }));
 
 // CORS Configuration
+const allowedOrigins = [
+  'https://forma-frontend-six.vercel.app',
+  config.clientUrl,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5000'
+].filter(Boolean);
+
 const corsOptions = {
-  origin: config.clientUrl || '*',
+  origin: (origin, callback) => {
+    // Allow non-browser requests (like Postman, mobile apps, curl)
+    if (!origin) return callback(null, true);
+
+    const normalizedOrigin = origin.replace(/\/+$/, '');
+    const isAllowed = allowedOrigins.some(allowed => {
+      const normalizedAllowed = allowed.replace(/\/+$/, '');
+      return normalizedAllowed === normalizedOrigin;
+    }) || normalizedOrigin.endsWith('.vercel.app'); // Allow Vercel preview/production deployments
+
+    if (isAllowed || config.env === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS error: Origin ${origin} is not allowed by CORS`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Set-Cookie']
 };
+
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // HTTP Request Logger
 if (config.env !== 'test') {
