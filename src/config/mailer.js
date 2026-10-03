@@ -18,6 +18,9 @@ const createTransporter = () => {
             user: config.email.user,
             pass: config.email.pass
           },
+          connectionTimeout: 5000, // 5s connection timeout
+          greetingTimeout: 5000,
+          socketTimeout: 8000,
           tls: {
             rejectUnauthorized: false
           }
@@ -30,6 +33,9 @@ const createTransporter = () => {
             user: config.email.user,
             pass: config.email.pass
           },
+          connectionTimeout: 5000, // 5s connection timeout
+          greetingTimeout: 5000,
+          socketTimeout: 8000,
           tls: {
             rejectUnauthorized: false
           }
@@ -40,7 +46,7 @@ const createTransporter = () => {
     if (config.env !== 'test') {
       mailer.verify((error) => {
         if (error) {
-          console.warn(`[Nodemailer Warning] SMTP verification failed: ${error.message}`);
+          console.warn(`[Nodemailer Warning] SMTP verification failed: ${error.message}. If deploying on Render Free Tier, note that outbound SMTP ports (25, 465, 587) are blocked by the provider.`);
         } else {
           console.log(`[Nodemailer] Connected successfully to ${isGmail ? 'Gmail' : config.email.host} as ${config.email.user}`);
         }
