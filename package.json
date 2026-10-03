@@ -6,8 +6,10 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
+    "start:prod": "node --env-file=.env.production src/server.js",
     "dev": "nodemon src/server.js",
     "seed:admin": "node scripts/seedAdmin.js",
+    "seed:admin:prod": "node --env-file=.env.production scripts/seedAdmin.js",
     "test": "jest --runInBand --detectOpenHandles --forceExit"
   },
   "keywords": [

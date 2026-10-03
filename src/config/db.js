@@ -1,10 +1,20 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const config = require('./env');
+
+// Set public DNS servers to resolve MongoDB Atlas SRV records reliably (prevents querySrv ECONNREFUSED)
+if (config.mongoUri && config.mongoUri.startsWith('mongodb+srv://')) {
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+  } catch (err) {
+    console.warn('[Database] Custom DNS config note:', err.message);
+  }
+}
 
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(config.mongoUri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       autoIndex: true
     });
 

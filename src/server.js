@@ -1,6 +1,7 @@
 const app = require('./app');
 const connectDB = require('./config/db');
 const config = require('./config/env');
+const autoSeedAdmin = require('./utils/seedAdmin');
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
@@ -13,13 +14,17 @@ let server;
 // Start Server after connecting to MongoDB
 const startServer = async () => {
   try {
-    await connectDB();
+    const conn = await connectDB();
+
+    // Automatically seed super admin if not already present
+    await autoSeedAdmin();
 
     server = app.listen(config.port, '0.0.0.0', () => {
       console.log(`===============================================`);
       console.log(`  E-Commerce API Server Running                `);
       console.log(`  Environment: ${config.env}                   `);
       console.log(`  Port       : ${config.port}                  `);
+      console.log(`  Database   : ${conn.connection.name} (${conn.connection.host})`);
       console.log(`  Health URL : http://localhost:${config.port}/api/v1/health `);
       console.log(`===============================================`);
     });
