@@ -64,8 +64,7 @@ const register = asyncHandler(async (req, res) => {
       userId: user._id,
       name: user.name,
       email: user.email,
-      isEmailVerified: user.isEmailVerified,
-      otp: plainOtp // Provided so verification can proceed even if cloud SMTP ports are blocked
+      isEmailVerified: user.isEmailVerified
     },
     'Registration successful! Please verify your email with the OTP sent to you.'
   );
@@ -168,8 +167,8 @@ const resendOtp = asyncHandler(async (req, res) => {
 
   return ApiResponse.success(
     res,
-    { otp: plainOtp },
-    'A new verification OTP has been sent. Check your email or verification screen.'
+    null,
+    'A new verification OTP has been sent to your email.'
   );
 });
 
