@@ -1,55 +1,56 @@
 const nodemailer = require('nodemailer');
 const config = require('./env');
 
-let transporter = null;
-
+/**
+ * Pure Nodemailer Transporter Configuration
+ * Automatically configures Gmail service or custom SMTP
+ */
 const createTransporter = () => {
-  // 1. Resend API support (HTTPS over port 443 - works on Render Free Tier without SMTP block)
-  if (process.env.RESEND_API_KEY) {
-    return {
-      sendMail: async (options) => {
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            from: process.env.RESEND_FROM || 'onboarding@resend.dev',
-            to: [options.to],
-            subject: options.subject,
-            html: options.html,
-            text: options.text
-          })
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(`Resend API error (${response.status}): ${errText}`);
-        }
-
-        return await response.json();
-      }
-    };
-  }
-
-  // 2. Nodemailer SMTP (Note: Render Free Tier drops outbound packets on ports 25, 465, 587)
   if (config.email.user && config.email.pass) {
-    return nodemailer.createTransport({
-      host: config.email.host,
-      port: config.email.port,
-      secure: config.email.port === 465,
-      auth: {
-        user: config.email.user,
-        pass: config.email.pass
-      },
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 8000
-    });
+    const isGmail =
+      (config.email.host && config.email.host.includes('gmail')) ||
+      (config.email.user && config.email.user.includes('gmail'));
+
+    const transportOptions = isGmail
+      ? {
+          service: 'gmail',
+          auth: {
+            user: config.email.user,
+            pass: config.email.pass
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        }
+      : {
+          host: config.email.host,
+          port: config.email.port,
+          secure: config.email.port === 465,
+          auth: {
+            user: config.email.user,
+            pass: config.email.pass
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        };
+
+    const mailer = nodemailer.createTransport(transportOptions);
+
+    if (config.env !== 'test') {
+      mailer.verify((error) => {
+        if (error) {
+          console.warn(`[Nodemailer Warning] SMTP verification failed: ${error.message}`);
+        } else {
+          console.log(`[Nodemailer] Connected successfully to ${isGmail ? 'Gmail' : config.email.host} as ${config.email.user}`);
+        }
+      });
+    }
+
+    return mailer;
   }
 
-  // 3. Fallback transporter: logs email to console
+  // Fallback transporter: logs email to console in development
   return {
     sendMail: async (options) => {
       console.log('----------------------------------------------------');
@@ -63,6 +64,6 @@ const createTransporter = () => {
   };
 };
 
-transporter = createTransporter();
+const transporter = createTransporter();
 
 module.exports = transporter;
