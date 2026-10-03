@@ -53,17 +53,10 @@ const register = asyncHandler(async (req, res) => {
     });
   }
 
-  // Attempt email delivery
-  let mailDelivered = false;
-  try {
-    await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
-    mailDelivered = true;
-  } catch (err) {
-    console.error('[Mail Error] Send verification OTP failed:', err.message);
-    console.log('================================================================');
-    console.log(`[VERIFICATION OTP FOR ${user.email}]: ${plainOtp}`);
-    console.log('================================================================');
-  }
+  // Dispatch email delivery in background to prevent blocking response if cloud SMTP is blocked
+  MailService.sendVerificationOtp(user.email, user.name, plainOtp).catch((err) => {
+    console.warn(`[Mail Notice] Direct SMTP delivery failed (${err.message}). Verification OTP for ${user.email}: ${plainOtp}`);
+  });
 
   return ApiResponse.created(
     res,
@@ -74,9 +67,7 @@ const register = asyncHandler(async (req, res) => {
       isEmailVerified: user.isEmailVerified,
       otp: plainOtp // Provided so verification can proceed even if cloud SMTP ports are blocked
     },
-    mailDelivered
-      ? 'Registration successful! Please verify your email with the OTP sent to you.'
-      : 'Registration successful! Verification code generated (check your email or console logs).'
+    'Registration successful! Please verify your email with the OTP sent to you.'
   );
 });
 
@@ -170,23 +161,15 @@ const resendOtp = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  let mailDelivered = false;
-  try {
-    await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
-    mailDelivered = true;
-  } catch (err) {
-    console.error('[Mail Error] Resend OTP failed:', err.message);
-    console.log('================================================================');
-    console.log(`[RESENT VERIFICATION OTP FOR ${user.email}]: ${plainOtp}`);
-    console.log('================================================================');
-  }
+  // Dispatch email delivery in background
+  MailService.sendVerificationOtp(user.email, user.name, plainOtp).catch((err) => {
+    console.warn(`[Mail Notice] Resend SMTP delivery failed (${err.message}). Resent OTP for ${user.email}: ${plainOtp}`);
+  });
 
   return ApiResponse.success(
     res,
     { otp: plainOtp },
-    mailDelivered
-      ? 'A new verification OTP has been sent to your email.'
-      : 'A new verification OTP has been generated! Check server logs if email delivery is blocked on cloud free tier.'
+    'A new verification OTP has been sent. Check your email or verification screen.'
   );
 });
 

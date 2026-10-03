@@ -11,6 +11,9 @@ const { apiLimiter } = require('./middleware/rateLimiter.middleware');
 
 const app = express();
 
+// Trust reverse proxy headers (Render, Vercel, Heroku, AWS ELB, etc.)
+app.set('trust proxy', 1);
+
 // Security Headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
