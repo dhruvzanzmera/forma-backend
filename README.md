@@ -68,6 +68,11 @@ Backend/
     └── products/             # Uploaded product images
 ```
 
+Product images currently use local disk storage. This is suitable for local
+development, but files on Render's local filesystem do not survive service
+restarts or redeploys; configure persistent external storage before relying on
+uploaded images in production.
+
 To add a feature, place its route, controller, model, and validator in their
 matching resource-specific files under `routes/`, `controllers/`, `models/`, and
 `validators/`. Add a service in `services/` only when business logic needs to be

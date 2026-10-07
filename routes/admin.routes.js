@@ -33,6 +33,7 @@ router.get('/dashboard', adminController.getDashboardStats);
 
 // 2. Product Management
 router.get('/products', productController.getAllAdminProducts);
+router.get('/products/:id', validate(productIdParamValidator), productController.getAdminProductById);
 router.post(
   '/products',
   upload.array('images', 5),

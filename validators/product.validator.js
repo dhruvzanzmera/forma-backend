@@ -51,6 +51,16 @@ const createProductValidator = [
 
 const updateProductValidator = [
   ...productIdParamValidator,
+  body('existingImages')
+    .optional()
+    .isJSON()
+    .withMessage('Existing product images must be a valid JSON array')
+    .bail()
+    .custom((value) => {
+      const images = JSON.parse(value);
+      return Array.isArray(images) && images.every((image) => typeof image === 'string');
+    })
+    .withMessage('Existing product images must be a JSON array of strings'),
   body('name')
     .optional()
     .trim()

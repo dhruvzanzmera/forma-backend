@@ -94,6 +94,34 @@ describe('E-Commerce End-to-End Workflow', () => {
     testProduct = res.body.data;
   });
 
+  it('Admin should load a product and replace unavailable image references', async () => {
+    const missingImages = ['/uploads/products/missing-after-restart.jpg'];
+
+    const updateRes = await request(app)
+      .put(`/api/v1/admin/products/${testProduct._id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ existingImages: JSON.stringify(missingImages) });
+
+    expect(updateRes.statusCode).toBe(200);
+    expect(updateRes.body.data.images).toEqual(missingImages);
+
+    const productRes = await request(app)
+      .get(`/api/v1/admin/products/${testProduct._id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(productRes.statusCode).toBe(200);
+    expect(productRes.body.data.images).toEqual(missingImages);
+
+    const removeMissingImageRes = await request(app)
+      .put(`/api/v1/admin/products/${testProduct._id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ existingImages: JSON.stringify([]) });
+
+    expect(removeMissingImageRes.statusCode).toBe(200);
+    expect(removeMissingImageRes.body.data.images).toEqual([]);
+    testProduct = removeMissingImageRes.body.data;
+  });
+
   // 2. Public Browsing
   it('Public user should browse and find the product', async () => {
     const res = await request(app)

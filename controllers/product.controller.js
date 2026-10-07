@@ -147,10 +147,23 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (isActive !== undefined) product.isActive = isActive === 'true' || isActive === true;
   if (isFeatured !== undefined) product.isFeatured = isFeatured === 'true' || isFeatured === true;
 
-  // Append any newly uploaded images
-  if (req.files && req.files.length > 0) {
-    const newImageUrls = req.files.map((file) => `/uploads/products/${file.filename}`);
-    product.images = [...product.images, ...newImageUrls];
+  const uploadedImages = (req.files || []).map((file) => `/uploads/products/${file.filename}`);
+  if (req.body.existingImages !== undefined) {
+    let existingImages;
+    try {
+      existingImages = JSON.parse(req.body.existingImages);
+    } catch (error) {
+      throw ApiError.badRequest('Existing product images must be a valid JSON array.');
+    }
+
+    if (!Array.isArray(existingImages) || existingImages.some((image) => typeof image !== 'string')) {
+      throw ApiError.badRequest('Existing product images must be a valid JSON array.');
+    }
+
+    product.images = [...existingImages, ...uploadedImages];
+  } else if (uploadedImages.length > 0) {
+    // Keep the existing images for clients that only upload additional files.
+    product.images = [...product.images, ...uploadedImages];
   }
 
   await product.save();
@@ -204,11 +217,25 @@ const getAllAdminProducts = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, result.products, 'Products retrieved.', 200, result.meta);
 });
 
+/**
+ * Get a product for the admin editor, including inactive products.
+ * Route: GET /api/v1/admin/products/:id
+ */
+const getAdminProductById = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id).populate('category', 'name slug');
+  if (!product) {
+    throw ApiError.notFound('Product not found.');
+  }
+
+  return ApiResponse.success(res, product, 'Product retrieved successfully.');
+});
+
 module.exports = {
   getProducts,
   getProductBySlugOrId,
   getFeaturedProducts,
   getAllAdminProducts,
+  getAdminProductById,
   createProduct,
   updateProduct,
   updateProductStock,
