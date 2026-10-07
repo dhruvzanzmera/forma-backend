@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../src/app');
+const app = require('../app');
 
 describe('Auth Validation & Security Suite', () => {
   it('POST /api/v1/auth/register should fail validation if required fields are missing', async () => {

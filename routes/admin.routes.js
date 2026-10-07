@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
+const productController = require('../controllers/product.controller');
+const categoryController = require('../controllers/category.controller');
+const userController = require('../controllers/user.controller');
+const orderController = require('../controllers/order.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
 const upload = require('../middleware/upload.middleware');
@@ -28,57 +32,57 @@ router.use(protect, authorize(UserRole.ADMIN));
 router.get('/dashboard', adminController.getDashboardStats);
 
 // 2. Product Management
-router.get('/products', adminController.getAllAdminProducts);
+router.get('/products', productController.getAllAdminProducts);
 router.post(
   '/products',
   upload.array('images', 5),
   validate(createProductValidator),
-  adminController.createProduct
+  productController.createProduct
 );
 router.put(
   '/products/:id',
   upload.array('images', 5),
   validate(updateProductValidator),
-  adminController.updateProduct
+  productController.updateProduct
 );
 router.patch(
   '/products/:id/stock',
   validate(productIdParamValidator),
-  adminController.updateProductStock
+  productController.updateProductStock
 );
 router.delete(
   '/products/:id',
   validate(productIdParamValidator),
-  adminController.deleteProduct
+  productController.deleteProduct
 );
 
 // 3. Category Management
-router.get('/categories', adminController.getAllAdminCategories);
-router.post('/categories', validate(createCategoryValidator), adminController.createCategory);
-router.put('/categories/:id', validate(updateCategoryValidator), adminController.updateCategory);
+router.get('/categories', categoryController.getAllAdminCategories);
+router.post('/categories', validate(createCategoryValidator), categoryController.createCategory);
+router.put('/categories/:id', validate(updateCategoryValidator), categoryController.updateCategory);
 router.delete(
   '/categories/:id',
   validate(categoryIdParamValidator),
-  adminController.deleteCategory
+  categoryController.deleteCategory
 );
 
 // 4. Customer Management
-router.get('/customers', adminController.getCustomers);
-router.get('/customers/:id', adminController.getCustomerById);
-router.patch('/customers/:id/status', adminController.toggleCustomerStatus);
-router.get('/customers/:id/orders', adminController.getCustomerOrders);
+router.get('/customers', userController.getCustomers);
+router.get('/customers/:id', userController.getCustomerById);
+router.patch('/customers/:id/status', userController.toggleCustomerStatus);
+router.get('/customers/:id/orders', userController.getCustomerOrders);
 
 // 5. Order Management
-router.get('/orders', adminController.getAllOrders);
+router.get('/orders', orderController.getAllOrders);
 router.patch(
   '/orders/:id/status',
   validate(updateOrderStatusValidator),
-  adminController.updateOrderStatus
+  orderController.updateOrderStatus
 );
 router.patch(
   '/orders/:id/payment-status',
   validate(updatePaymentStatusValidator),
-  adminController.updatePaymentStatus
+  orderController.updatePaymentStatus
 );
 
 module.exports = router;

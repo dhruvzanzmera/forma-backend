@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const connectDB = require('../src/config/db');
-const autoSeedAdmin = require('../src/utils/seedAdmin');
+const connectDB = require('../config/db');
+const autoSeedAdmin = require('../utils/seedAdmin');
 
 const run = async () => {
   try {

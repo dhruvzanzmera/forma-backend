@@ -1,14 +1,14 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../src/app');
-const User = require('../src/models/user.model');
-const Category = require('../src/models/category.model');
-const Product = require('../src/models/product.model');
-const Address = require('../src/models/address.model');
-const Order = require('../src/models/order.model');
-const Cart = require('../src/models/cart.model');
-const connectDB = require('../src/config/db');
-const { UserRole, OrderStatus, PaymentStatus } = require('../src/constants');
+const app = require('../app');
+const User = require('../models/user.model');
+const Category = require('../models/category.model');
+const Product = require('../models/product.model');
+const Address = require('../models/address.model');
+const Order = require('../models/order.model');
+const Cart = require('../models/cart.model');
+const connectDB = require('../config/db');
+const { UserRole, OrderStatus, PaymentStatus } = require('../constants');
 
 let adminToken;
 let customerToken;

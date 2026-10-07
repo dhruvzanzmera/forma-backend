@@ -5,7 +5,7 @@ const Order = require('../models/order.model');
 const ApiResponse = require('../utils/apiResponse');
 const ApiError = require('../utils/apiError');
 const asyncHandler = require('../utils/asyncHandler');
-const { OrderStatus } = require('../constants');
+const { OrderStatus, PaymentStatus } = require('../constants');
 
 /**
  * Checkout Summary & Validation before placing order
@@ -154,11 +154,84 @@ const trackOrder = asyncHandler(async (req, res) => {
   );
 });
 
+// ==========================================
+// 5. ORDER MANAGEMENT
+// ==========================================
+
+/**
+ * Get All Orders (Admin with search, status filters, pagination)
+ * Route: GET /api/v1/admin/orders
+ */
+const getAllOrders = asyncHandler(async (req, res) => {
+  const { orderStatus, paymentStatus, search, page = 1, limit = 10 } = req.query;
+
+  const filter = {};
+
+  if (orderStatus && Object.values(OrderStatus).includes(orderStatus)) {
+    filter.orderStatus = orderStatus;
+  }
+
+  if (paymentStatus && Object.values(PaymentStatus).includes(paymentStatus)) {
+    filter.paymentStatus = paymentStatus;
+  }
+
+  if (search && search.trim() !== '') {
+    filter.orderNumber = { $regex: search.trim(), $options: 'i' };
+  }
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
+  const skip = (pageNum - 1) * limitNum;
+
+  const [orders, total] = await Promise.all([
+    Order.find(filter)
+      .populate('user', 'name email phone')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum),
+    Order.countDocuments(filter)
+  ]);
+
+  const totalPages = Math.ceil(total / limitNum) || 1;
+
+  return ApiResponse.success(res, orders, 'Orders fetched successfully.', 200, {
+    total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages,
+    hasNextPage: pageNum < totalPages,
+    hasPrevPage: pageNum > 1
+  });
+});
+
+/**
+ * Update Order Status
+ * Route: PATCH /api/v1/admin/orders/:id/status
+ */
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { status, reason } = req.body;
+  const order = await OrderService.updateOrderStatus(req.params.id, status, reason);
+  return ApiResponse.success(res, order, `Order status updated to ${status}.`);
+});
+
+/**
+ * Update Payment Status
+ * Route: PATCH /api/v1/admin/orders/:id/payment-status
+ */
+const updatePaymentStatus = asyncHandler(async (req, res) => {
+  const { paymentStatus } = req.body;
+  const order = await OrderService.updatePaymentStatus(req.params.id, paymentStatus);
+  return ApiResponse.success(res, order, `Payment status updated to ${paymentStatus}.`);
+});
+
 module.exports = {
   getCheckoutSummary,
   placeOrder,
   getMyOrders,
   getOrderById,
   cancelOrder,
-  trackOrder
+  trackOrder,
+  getAllOrders,
+  updateOrderStatus,
+  updatePaymentStatus
 };

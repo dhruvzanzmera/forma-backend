@@ -32,7 +32,6 @@ A complete, production-ready, modular E-Commerce RESTful Backend built with **No
 - **Bcrypt Password & OTP Hashing**: Sensitive data is always hashed and stripped from JSON serialization (`select: false`).
 - **Input Validation**: Strict request schema validation powered by `express-validator`.
 - **Security Headers & CORS**: Integrated with `helmet` and configurable `cors`.
-- **Rate Limiting**: Tiered rate limiters (standard API limiter and strict auth limiter).
 - **File Upload Security**: Multer configuration enforcing mime-type whitelisting (JPEG, JPG, PNG, WEBP) and file size limits.
 - **Centralized Error Handling**: Unified operational `ApiError` class with standard HTTP error responses.
 - **Graceful Fallbacks**: Safe transaction runner (`runTransaction`) compatible with both MongoDB replica sets and standalone instances.
@@ -51,65 +50,28 @@ Backend/
 ├── README.md                 # API documentation and project guide
 ├── scripts/
 │   └── seedAdmin.js          # Admin user seeder script
-├── src/
-│   ├── app.js                # Express app setup and middleware pipeline
-│   ├── server.js             # HTTP server entry point and database connection
-│   ├── config/
-│   │   ├── db.js             # Mongoose connection & connection events
-│   │   ├── env.js            # Centralized environment variables
-│   │   └── mailer.js         # Nodemailer transporter & dev fallback
-│   ├── constants/
-│   │   └── index.js          # Enums (UserRole, OrderStatus, PaymentStatus, etc.)
-│   ├── controllers/
-│   │   ├── address.controller.js
-│   │   ├── admin.controller.js
-│   │   ├── auth.controller.js
-│   │   ├── cart.controller.js
-│   │   ├── category.controller.js
-│   │   ├── order.controller.js
-│   │   ├── product.controller.js
-│   │   └── user.controller.js
-│   ├── middleware/
-│   │   ├── auth.middleware.js
-│   │   ├── error.middleware.js
-│   │   ├── rateLimiter.middleware.js
-│   │   ├── upload.middleware.js
-│   │   └── validate.middleware.js
-│   ├── models/
-│   │   ├── address.model.js
-│   │   ├── cart.model.js
-│   │   ├── category.model.js
-│   │   ├── order.model.js
-│   │   ├── product.model.js
-│   │   └── user.model.js
-│   ├── routes/
-│   │   ├── address.routes.js
-│   │   ├── admin.routes.js
-│   │   ├── auth.routes.js
-│   │   ├── cart.routes.js
-│   │   ├── category.routes.js
-│   │   ├── index.js          # Version 1 root router (/api/v1)
-│   │   ├── order.routes.js
-│   │   ├── product.routes.js
-│   │   └── user.routes.js
-│   ├── services/
-│   │   ├── cart.service.js
-│   │   ├── mail.service.js
-│   │   ├── order.service.js
-│   │   └── product.service.js
-│   └── utils/
-│       ├── apiError.js
-│       ├── apiResponse.js
-│       ├── asyncHandler.js
-│       ├── otp.util.js
-│       ├── slug.util.js
-│       └── transaction.util.js
+├── config/                   # Database, environment, and mail configuration
+├── constants/                # Shared enums and constants
+├── controllers/              # Request handlers, grouped by resource
+├── middleware/               # Authentication, validation, upload, and errors
+├── models/                   # Mongoose models, grouped by resource
+├── routes/                   # Resource routes and the API root router
+├── services/                 # Reusable business and email services
+├── utils/                    # Shared helpers and resource-specific utilities
+├── validators/               # Request validation rules, grouped by resource
+├── app.js                    # Express app setup and middleware pipeline
+├── server.js                 # HTTP server entry point and database connection
 ├── tests/
 │   ├── auth.test.js          # Request validation & authentication tests
 │   └── health.test.js        # Health check & 404 tests
 └── uploads/
     └── products/             # Uploaded product images
 ```
+
+To add a feature, place its route, controller, model, and validator in their
+matching resource-specific files under `routes/`, `controllers/`, `models/`, and
+`validators/`. Add a service in `services/` only when business logic needs to be
+shared or kept separate from request handling.
 
 ---
 

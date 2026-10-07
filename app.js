@@ -7,7 +7,6 @@ const path = require('path');
 const config = require('./config/env');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/error.middleware');
-const { apiLimiter } = require('./middleware/rateLimiter.middleware');
 
 const app = express();
 
@@ -64,10 +63,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static file serving for uploaded product images
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
-
-// General API Rate Limiting
-app.use('/api/v1', apiLimiter);
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
 // API Version 1 Routes
 app.use('/api/v1', routes);

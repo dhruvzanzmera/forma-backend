@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 
-const rootDir = path.resolve(__dirname, '../../');
+const rootDir = path.resolve(__dirname, '..');
 const currentEnv = process.env.NODE_ENV || 'development';
 
 // 1. Load environment-specific file (.env.production or .env.development) if present

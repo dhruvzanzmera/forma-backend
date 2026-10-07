@@ -4,7 +4,7 @@ const fs = require('fs');
 const ApiError = require('../utils/apiError');
 const config = require('../config/env');
 
-const uploadDir = path.resolve(__dirname, '../../uploads/products');
+const uploadDir = path.resolve(__dirname, '../uploads/products');
 
 // Ensure directory exists
 if (!fs.existsSync(uploadDir)) {
