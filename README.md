@@ -22,7 +22,7 @@ A complete, production-ready, modular E-Commerce RESTful Backend built with **No
 - **Role-Based Authorization**: Protected endpoints strictly authorized for `admin` role.
 - **Admin Seeder**: One-command seed script (`npm run seed:admin`) reading admin credentials from `.env`.
 - **Executive Dashboard & Analytics**: Total revenue, delivered revenue, order volume, total customers, low-stock alerts, order status distribution, and recent orders.
-- **Product Management (CRUD)**: Create products with multiple image uploads (Multer), update details, manage stock count directly, and delete products.
+- **Product Management (CRUD)**: Create products with multiple image uploads to Cloudinary, update details, manage stock count directly, and delete products.
 - **Category Management (CRUD)**: Create, update, toggle active status, and delete categories with referential integrity checks.
 - **Customer Management**: View customer directory with search and pagination, view order history per customer, and activate/deactivate accounts.
 - **Order Management**: Search, filter, and paginate all store orders; update order statuses (`PENDING`, `CONFIRMED`, `PROCESSING`, `SHIPPED`, `OUT_FOR_DELIVERY`, `DELIVERED`, `CANCELLED`); update payment status (`PENDING`, `PAID`, `FAILED`, `REFUNDED`).
@@ -32,7 +32,7 @@ A complete, production-ready, modular E-Commerce RESTful Backend built with **No
 - **Bcrypt Password & OTP Hashing**: Sensitive data is always hashed and stripped from JSON serialization (`select: false`).
 - **Input Validation**: Strict request schema validation powered by `express-validator`.
 - **Security Headers & CORS**: Integrated with `helmet` and configurable `cors`.
-- **File Upload Security**: Multer configuration enforcing mime-type whitelisting (JPEG, JPG, PNG, WEBP) and file size limits.
+- **File Upload Security**: Multipart uploads are streamed to Cloudinary with JPEG, JPG, PNG, and WEBP type checks and file size limits; images are not stored on the backend filesystem.
 - **Centralized Error Handling**: Unified operational `ApiError` class with standard HTTP error responses.
 - **Graceful Fallbacks**: Safe transaction runner (`runTransaction`) compatible with both MongoDB replica sets and standalone instances.
 - **Email Simulation Fallback**: When SMTP credentials are not configured in development, OTPs and notifications are logged directly to the console for frictionless local testing.
@@ -64,14 +64,14 @@ Backend/
 ├── tests/
 │   ├── auth.test.js          # Request validation & authentication tests
 │   └── health.test.js        # Health check & 404 tests
-└── uploads/
-    └── products/             # Uploaded product images
 ```
 
-Product images currently use local disk storage. This is suitable for local
-development, but files on Render's local filesystem do not survive service
-restarts or redeploys; configure persistent external storage before relying on
-uploaded images in production.
+Product images are stored in Cloudinary and their secure URLs are saved in
+MongoDB. Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` in the backend environment (including Render) before
+uploading images. Create a Cloudinary account, then find these values in the
+Cloudinary Console under **Settings → API Keys**. Never add the API secret to
+the frontend or commit real credentials.
 
 To add a feature, place its route, controller, model, and validator in their
 matching resource-specific files under `routes/`, `controllers/`, `models/`, and
@@ -106,6 +106,9 @@ Key environment variables:
 | `JWT_SECRET` | Secret key for JWT signing | (Secure random secret) |
 | `JWT_EXPIRES_IN` | Token expiration duration | `7d` |
 | `CLIENT_URL` | Allowed CORS origin (e.g. React frontend) | `http://localhost:3000` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | (required for image uploads) |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | (required for image uploads) |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | (required for image uploads) |
 | `ADMIN_NAME` | Super Admin Name for seeder | `Super Admin` |
 | `ADMIN_EMAIL` | Super Admin Email for seeder | `admin@example.com` |
 | `ADMIN_PASSWORD` | Super Admin Password for seeder | `Admin@12345` |

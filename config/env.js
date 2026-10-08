@@ -28,6 +28,12 @@ const config = {
   },
   
   clientUrl: (process.env.CLIENT_URL || 'http://localhost:3000').replace(/\/+$/, ''),
+
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || ''
+  },
   
   admin: {
     name: process.env.ADMIN_NAME || 'Super Admin',

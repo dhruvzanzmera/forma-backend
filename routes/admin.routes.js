@@ -7,7 +7,7 @@ const userController = require('../controllers/user.controller');
 const orderController = require('../controllers/order.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
-const upload = require('../middleware/upload.middleware');
+const uploadImages = require('../middleware/cloudinaryUpload.middleware');
 const { UserRole } = require('../constants');
 const {
   productIdParamValidator,
@@ -36,13 +36,13 @@ router.get('/products', productController.getAllAdminProducts);
 router.get('/products/:id', validate(productIdParamValidator), productController.getAdminProductById);
 router.post(
   '/products',
-  upload.array('images', 5),
+  uploadImages,
   validate(createProductValidator),
   productController.createProduct
 );
 router.put(
   '/products/:id',
-  upload.array('images', 5),
+  uploadImages,
   validate(updateProductValidator),
   productController.updateProduct
 );

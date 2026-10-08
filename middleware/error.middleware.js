@@ -47,15 +47,6 @@ const errorHandler = (err, req, res, next) => {
     error = ApiError.unauthorized('Authentication token expired. Please log in again.');
   }
 
-  // Handle Multer upload errors
-  if (err.name === 'MulterError') {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      error = ApiError.badRequest(`File is too large. Maximum size is ${config.business.maxFileSizeMb}MB.`);
-    } else {
-      error = ApiError.badRequest(`File upload error: ${err.message}`);
-    }
-  }
-
   const statusCode = error.statusCode || 500;
   const response = {
     success: false,

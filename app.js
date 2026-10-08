@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
-
 const config = require('./config/env');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/error.middleware');
@@ -61,9 +59,6 @@ if (config.env !== 'test') {
 // Body Parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Static file serving for uploaded product images
-app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
 // API Version 1 Routes
 app.use('/api/v1', routes);

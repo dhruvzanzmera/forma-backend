@@ -437,7 +437,7 @@ Base URL: `http://localhost:5000/api/v1`
       "name": "Electronics",
       "slug": "electronics",
       "description": "Smartphones, Laptops and Accessories",
-      "image": "/uploads/categories/electronics.png",
+      "image": "https://res.cloudinary.com/your-cloud/image/upload/v1234567890/categories/electronics.png",
       "isActive": true
     }
   ]
@@ -492,7 +492,7 @@ Base URL: `http://localhost:5000/api/v1`
         "slug": "electronics"
       },
       "images": [
-        "/uploads/products/product-1712000000000-12345.webp"
+        "https://res.cloudinary.com/your-cloud/image/upload/v1234567890/forma/products/example.webp"
       ],
       "isFeatured": true,
       "isActive": true
@@ -546,7 +546,7 @@ Base URL: `http://localhost:5000/api/v1`
         "productId": "67f3a4b5c6d7e8f9a0b1c2d3",
         "name": "Wireless Noise Cancelling Headphones",
         "slug": "wireless-noise-cancelling-headphones",
-        "image": "/uploads/products/product-1.webp",
+        "image": "https://res.cloudinary.com/your-cloud/image/upload/v1234567890/forma/products/example.webp",
         "price": 199.99,
         "originalPrice": 249.99,
         "quantity": 2,
@@ -678,7 +678,7 @@ Base URL: `http://localhost:5000/api/v1`
         "name": "Wireless Noise Cancelling Headphones",
         "price": 199.99,
         "quantity": 2,
-        "image": "/uploads/products/product-1.webp",
+        "image": "https://res.cloudinary.com/your-cloud/image/upload/v1234567890/forma/products/example.webp",
         "subtotal": 399.98
       }
     ],
@@ -842,6 +842,10 @@ Base URL: `http://localhost:5000/api/v1`
   - `sku`: KB-MECH-RGB-01
   - `isFeatured`: true
   - `images`: (file upload - up to 5 images: jpg, png, webp)
+
+Uploaded product images are stored in Cloudinary; the API returns each image's
+secure Cloudinary URL. Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
+and `CLOUDINARY_API_SECRET` on the backend before uploading.
 
 #### 3. Update Product
 - **Method**: `PUT`

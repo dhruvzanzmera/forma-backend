@@ -82,10 +82,10 @@ const createProduct = asyncHandler(async (req, res) => {
     slug = `${slug}-${Date.now().toString().slice(-4)}`;
   }
 
-  // Handle uploaded images from multer
+  // Store Cloudinary URLs so images remain available across backend restarts.
   let images = [];
   if (req.files && req.files.length > 0) {
-    images = req.files.map((file) => `/uploads/products/${file.filename}`);
+    images = req.files.map((file) => file.secure_url);
   } else if (req.body.images) {
     images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
   }
@@ -147,7 +147,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (isActive !== undefined) product.isActive = isActive === 'true' || isActive === true;
   if (isFeatured !== undefined) product.isFeatured = isFeatured === 'true' || isFeatured === true;
 
-  const uploadedImages = (req.files || []).map((file) => `/uploads/products/${file.filename}`);
+  const uploadedImages = (req.files || []).map((file) => file.secure_url);
   if (req.body.existingImages !== undefined) {
     let existingImages;
     try {
