@@ -55,8 +55,14 @@ const register = asyncHandler(async (req, res) => {
     await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
   } catch (error) {
     console.error(`[Mail Error] Registration verification delivery failed: ${error.message}`);
+    if (config.isRender && !config.email.resendApiKey) {
+      throw ApiError.serviceUnavailable(
+        'Your account was saved, but email is not configured on Render. Add RESEND_API_KEY and a Resend-verified EMAIL_FROM address to the service environment, redeploy, then retry registration.'
+      );
+    }
+
     throw ApiError.serviceUnavailable(
-      'Your account was saved, but we could not send the verification email. Please try again later.'
+      'Your account was saved, but the email provider could not accept the verification email. Check the backend logs and Resend API key and sender configuration, then retry registration.'
     );
   }
 
