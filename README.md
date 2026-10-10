@@ -1,6 +1,6 @@
 # Production-Ready E-Commerce REST API Backend
 
-A complete, production-ready, modular E-Commerce RESTful Backend built with **Node.js, Express.js, MongoDB, and Mongoose**. Designed with a clean MVC/Service-oriented architecture, comprehensive customer and admin capabilities, robust security, server-side price/stock validations, Cash on Delivery (COD) workflows, transactional inventory management, and automated email notifications with Nodemailer.
+A complete, production-ready, modular E-Commerce RESTful Backend built with **Node.js, Express.js, MongoDB, and Mongoose**. Designed with a clean MVC/Service-oriented architecture, comprehensive customer and admin capabilities, robust security, server-side price/stock validations, Cash on Delivery (COD) workflows, transactional inventory management, and transactional email delivery through Resend's HTTPS API or optional SMTP.
 
 ---
 
@@ -35,7 +35,7 @@ A complete, production-ready, modular E-Commerce RESTful Backend built with **No
 - **File Upload Security**: Multipart uploads are streamed to Cloudinary with JPEG, JPG, PNG, and WEBP type checks and file size limits; images are not stored on the backend filesystem.
 - **Centralized Error Handling**: Unified operational `ApiError` class with standard HTTP error responses.
 - **Graceful Fallbacks**: Safe transaction runner (`runTransaction`) compatible with both MongoDB replica sets and standalone instances.
-- **Email Simulation Fallback**: When SMTP credentials are not configured in development, OTPs and notifications are logged directly to the console for frictionless local testing.
+- **Email Simulation Fallback**: When no email provider is configured in development, OTPs and notifications are logged directly to the console for local testing.
 
 ---
 
@@ -112,6 +112,27 @@ Key environment variables:
 | `ADMIN_NAME` | Super Admin Name for seeder | `Super Admin` |
 | `ADMIN_EMAIL` | Super Admin Email for seeder | `admin@example.com` |
 | `ADMIN_PASSWORD` | Super Admin Password for seeder | `Admin@12345` |
+| `RESEND_API_KEY` | Resend API key (recommended for Render) | (unset) |
+| `EMAIL_FROM` | Sender address verified with the email provider | (provider-specific) |
+
+### Email delivery on Render
+
+Render's free web services block outbound SMTP, so configure an HTTPS email
+provider instead. This backend supports the Resend API without an extra
+dependency:
+
+1. Create a Resend account, add and verify a domain/sender, and create an API
+   key.
+2. In the Render service's **Environment** settings, add `RESEND_API_KEY` with
+   that key and `EMAIL_FROM` with a sender address verified by Resend, such as
+   `"E-Commerce Store" <no-reply@your-domain.com>`.
+3. Redeploy the service. The application sends email through Resend over HTTPS;
+   OTP requests return success only after the provider accepts the email.
+
+Do not use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, or `SMTP_PASS` for a Render
+free service. Those settings are retained for local development and hosts that
+allow outbound SMTP. Without an email provider configured, production email
+requests fail explicitly rather than pretending the email was sent.
 
 ### 4. Seed the Admin User
 Run the automated database seeder to create your initial administrator account:

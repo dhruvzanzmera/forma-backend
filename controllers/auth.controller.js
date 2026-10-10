@@ -32,8 +32,7 @@ const register = asyncHandler(async (req, res) => {
     user.otp = {
       code: hashedOtp,
       expiresAt: otpExpiresAt,
-      type: OtpType.EMAIL_VERIFICATION,
-      lastSentAt: new Date()
+      type: OtpType.EMAIL_VERIFICATION
     };
     await user.save();
   } else {
@@ -47,16 +46,14 @@ const register = asyncHandler(async (req, res) => {
       otp: {
         code: hashedOtp,
         expiresAt: otpExpiresAt,
-        type: OtpType.EMAIL_VERIFICATION,
-        lastSentAt: new Date()
+        type: OtpType.EMAIL_VERIFICATION
       }
     });
   }
 
-  // Dispatch email delivery in background to prevent blocking response if cloud SMTP is blocked
-  MailService.sendVerificationOtp(user.email, user.name, plainOtp).catch((err) => {
-    console.warn(`[Mail Notice] Direct SMTP delivery failed (${err.message}). Verification OTP for ${user.email}: ${plainOtp}`);
-  });
+  await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
+  user.otp.lastSentAt = new Date();
+  await user.save();
 
   return ApiResponse.created(
     res,
@@ -154,16 +151,14 @@ const resendOtp = asyncHandler(async (req, res) => {
   user.otp = {
     code: hashedOtp,
     expiresAt: otpExpiresAt,
-    type: OtpType.EMAIL_VERIFICATION,
-    lastSentAt: new Date()
+    type: OtpType.EMAIL_VERIFICATION
   };
 
   await user.save();
 
-  // Dispatch email delivery in background
-  MailService.sendVerificationOtp(user.email, user.name, plainOtp).catch((err) => {
-    console.warn(`[Mail Notice] Resend SMTP delivery failed (${err.message}). Resent OTP for ${user.email}: ${plainOtp}`);
-  });
+  await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
+  user.otp.lastSentAt = new Date();
+  await user.save();
 
   return ApiResponse.success(
     res,
