@@ -126,13 +126,16 @@ dependency:
 2. In the Render service's **Environment** settings, add `RESEND_API_KEY` with
    that key and `EMAIL_FROM` with a sender address verified by Resend, such as
    `"E-Commerce Store" <no-reply@your-domain.com>`.
-3. Redeploy the service. The application sends email through Resend over HTTPS;
-   OTP requests return success only after the provider accepts the email.
+3. Remove the SMTP credentials from the Render service (or leave them unused),
+   then redeploy. The application sends email through Resend over HTTPS; OTP
+   requests return success only after the provider accepts the email.
 
 Do not use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, or `SMTP_PASS` for a Render
 free service. Those settings are retained for local development and hosts that
-allow outbound SMTP. Without an email provider configured, production email
-requests fail explicitly rather than pretending the email was sent.
+allow outbound SMTP. On Render, missing Resend configuration now fails fast
+instead of trying blocked SMTP ports. If registration email delivery fails,
+the account remains unverified and the API returns `503`; configure Resend and
+retry registration to send a fresh code.
 
 ### 4. Seed the Admin User
 Run the automated database seeder to create your initial administrator account:

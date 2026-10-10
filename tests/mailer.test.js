@@ -3,7 +3,9 @@ const environmentKeys = [
   'RESEND_API_KEY',
   'EMAIL_FROM',
   'SMTP_USER',
-  'SMTP_PASS'
+  'SMTP_PASS',
+  'RENDER',
+  'RENDER_SERVICE_ID'
 ];
 const originalEnvironment = {};
 let originalFetch;
@@ -97,5 +99,20 @@ describe('email delivery configuration', () => {
     expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
       'Email delivery is not configured'
     );
+  });
+
+  it('does not try SMTP on Render, even when SMTP credentials are present', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.RESEND_API_KEY = '';
+    process.env.SMTP_USER = 'smtp-user';
+    process.env.SMTP_PASS = 'smtp-password';
+    process.env.RENDER = 'true';
+    jest.resetModules();
+    const mailer = require('../config/mailer');
+
+    expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
+      'Render blocks outbound SMTP'
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

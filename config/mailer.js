@@ -68,7 +68,10 @@ const createSmtpTransporter = () => {
 };
 
 const smtpTransporter =
-  !config.email.resendApiKey && config.email.user && config.email.pass
+  !config.isRender &&
+  !config.email.resendApiKey &&
+  config.email.user &&
+  config.email.pass
     ? createSmtpTransporter()
     : null;
 
@@ -80,6 +83,12 @@ module.exports = {
 
     if (smtpTransporter) {
       return smtpTransporter.sendMail(options);
+    }
+
+    if (config.isRender) {
+      throw new Error(
+        'Render blocks outbound SMTP. Configure RESEND_API_KEY and a verified EMAIL_FROM address.'
+      );
     }
 
     if (config.env === 'production') {

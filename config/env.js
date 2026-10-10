@@ -19,6 +19,7 @@ if (fs.existsSync(defaultEnvPath)) {
 
 const config = {
   env: process.env.NODE_ENV || 'development',
+  isRender: process.env.RENDER === 'true' || Boolean(process.env.RENDER_SERVICE_ID),
   port: parseInt(process.env.PORT || '5000', 10),
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ecommerce_db',
   

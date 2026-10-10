@@ -51,7 +51,15 @@ const register = asyncHandler(async (req, res) => {
     });
   }
 
-  await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
+  try {
+    await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
+  } catch (error) {
+    console.error(`[Mail Error] Registration verification delivery failed: ${error.message}`);
+    throw ApiError.serviceUnavailable(
+      'Your account was saved, but we could not send the verification email. Please try again later.'
+    );
+  }
+
   user.otp.lastSentAt = new Date();
   await user.save();
 
