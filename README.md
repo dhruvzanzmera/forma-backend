@@ -112,7 +112,7 @@ Key environment variables:
 | `ADMIN_NAME` | Super Admin Name for seeder | `Super Admin` |
 | `ADMIN_EMAIL` | Super Admin Email for seeder | `admin@example.com` |
 | `ADMIN_PASSWORD` | Super Admin Password for seeder | `Admin@12345` |
-| `SMTP_HOST` | SMTP server provided by your email host | `smtp.mailtrap.io` |
+| `SMTP_HOST` | SMTP server provided by your email host | (set this) |
 | `SMTP_PORT` | SMTP server port (465 uses implicit TLS) | `2525` |
 | `SMTP_USER` | SMTP username | (unset) |
 | `SMTP_PASS` | SMTP password or app password | (unset) |
@@ -122,11 +122,14 @@ Key environment variables:
 
 Email is sent with Nodemailer over SMTP; the backend does not call an email
 provider's HTTP API. Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and
-`EMAIL_FROM` using values supplied by your SMTP host. Use a deployment host that
-allows outbound SMTP: Render blocks outbound SMTP, so registration emails will
-not send from Render. In development without SMTP credentials, OTP messages
-are printed to the backend console. In production, missing SMTP credentials
-return an explicit error instead of reporting a successful delivery.
+`EMAIL_FROM` in the Render service environment using the values supplied by your
+SMTP host. Render blocks the standard SMTP ports 25, 465, and 587; Gmail's SMTP
+port 465 will not work from Render. Use an SMTP host that supports port 2525,
+which Render permits, and configure that host's SMTP credentials. Port 2525
+uses STARTTLS when supported by the provider. In development without SMTP
+credentials, OTP messages are printed to the backend console. In production,
+missing SMTP credentials return an explicit error instead of reporting a
+successful delivery.
 
 ### 4. Seed the Admin User
 Run the automated database seeder to create your initial administrator account:

@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const config = require('./env');
 
 const smtpTransporter =
-  config.email.user && config.email.pass
+  config.email.host && config.email.user && config.email.pass
     ? nodemailer.createTransport({
         host: config.email.host,
         port: config.email.port,
@@ -19,12 +19,6 @@ const smtpTransporter =
 
 module.exports = {
   sendMail(options) {
-    if (config.isRender) {
-      throw new Error(
-        'Render blocks outbound SMTP. Deploy on a host that permits SMTP.'
-      );
-    }
-
     if (smtpTransporter) {
       return smtpTransporter.sendMail(options);
     }

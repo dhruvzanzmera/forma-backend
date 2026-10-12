@@ -55,14 +55,8 @@ const register = asyncHandler(async (req, res) => {
     await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
   } catch (error) {
     console.error(`[Mail Error] Registration verification delivery failed: ${error.message}`);
-    if (config.isRender) {
-      throw ApiError.serviceUnavailable(
-        'Your account was saved, but Render blocks outbound SMTP. Deploy the backend on a host that permits SMTP, configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and EMAIL_FROM, then retry registration.'
-      );
-    }
-
     throw ApiError.serviceUnavailable(
-      'Your account was saved, but the SMTP server could not accept the verification email. Check the backend logs and SMTP settings, then retry registration.'
+      'Your account was saved, but the SMTP server could not accept the verification email. Check the backend logs and SMTP host, port, credentials, and sender settings, then retry registration.'
     );
   }
 

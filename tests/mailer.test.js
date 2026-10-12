@@ -81,16 +81,27 @@ describe('email delivery configuration', () => {
     );
   });
 
-  it('reports blocked SMTP on Render when credentials are present', () => {
+  it('attempts the configured SMTP delivery on Render', async () => {
     process.env.NODE_ENV = 'production';
     process.env.SMTP_USER = 'smtp-user';
     process.env.SMTP_PASS = 'smtp-password';
     process.env.RENDER = 'true';
     jest.resetModules();
+    nodemailer = require('nodemailer');
+    nodemailer.createTransport.mockReturnValue({
+      sendMail: jest.fn().mockResolvedValue({ messageId: 'smtp_123' })
+    });
     const mailer = require('../config/mailer');
+    const message = {
+      from: 'Store <mail@example.com>',
+      to: 'customer@example.com',
+      subject: 'Verify your email'
+    };
 
-    expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
-      'Render blocks outbound SMTP'
-    );
+    await expect(mailer.sendMail(message)).resolves.toEqual({
+      messageId: 'smtp_123'
+    });
+    expect(nodemailer.createTransport.mock.results[0].value.sendMail)
+      .toHaveBeenCalledWith(message);
   });
 });

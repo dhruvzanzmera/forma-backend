@@ -44,7 +44,7 @@ const config = {
   },
   
   email: {
-    host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
+    host: process.env.SMTP_HOST || '',
     port: parseInt(process.env.SMTP_PORT || '2525', 10),
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
