@@ -1,6 +1,6 @@
 # Production-Ready E-Commerce REST API Backend
 
-A complete, production-ready, modular E-Commerce RESTful Backend built with **Node.js, Express.js, MongoDB, and Mongoose**. Designed with a clean MVC/Service-oriented architecture, comprehensive customer and admin capabilities, robust security, server-side price/stock validations, Cash on Delivery (COD) workflows, transactional inventory management, and transactional email delivery through Resend's HTTPS API or optional SMTP.
+A complete, production-ready, modular E-Commerce RESTful Backend built with **Node.js, Express.js, MongoDB, and Mongoose**. Designed with a clean MVC/Service-oriented architecture, comprehensive customer and admin capabilities, robust security, server-side price/stock validations, Cash on Delivery (COD) workflows, transactional inventory management, and transactional email delivery through Nodemailer and SMTP.
 
 ---
 
@@ -112,30 +112,21 @@ Key environment variables:
 | `ADMIN_NAME` | Super Admin Name for seeder | `Super Admin` |
 | `ADMIN_EMAIL` | Super Admin Email for seeder | `admin@example.com` |
 | `ADMIN_PASSWORD` | Super Admin Password for seeder | `Admin@12345` |
-| `RESEND_API_KEY` | Resend API key (recommended for Render) | (unset) |
-| `EMAIL_FROM` | Sender address verified with the email provider | (provider-specific) |
+| `SMTP_HOST` | SMTP server provided by your email host | `smtp.mailtrap.io` |
+| `SMTP_PORT` | SMTP server port (465 uses implicit TLS) | `2525` |
+| `SMTP_USER` | SMTP username | (unset) |
+| `SMTP_PASS` | SMTP password or app password | (unset) |
+| `EMAIL_FROM` | Sender address accepted by the SMTP server | (provider-specific) |
 
-### Email delivery on Render
+### Email delivery
 
-Render's free web services block outbound SMTP, so configure an HTTPS email
-provider instead. This backend supports the Resend API without an extra
-dependency:
-
-1. Create a Resend account, add and verify a domain/sender, and create an API
-   key.
-2. In the Render service's **Environment** settings, add `RESEND_API_KEY` with
-   that key and `EMAIL_FROM` with a sender address verified by Resend, such as
-   `"E-Commerce Store" <no-reply@your-domain.com>`.
-3. Remove the SMTP credentials from the Render service (or leave them unused),
-   then redeploy. The application sends email through Resend over HTTPS; OTP
-   requests return success only after the provider accepts the email.
-
-Do not use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, or `SMTP_PASS` for a Render
-free service. Those settings are retained for local development and hosts that
-allow outbound SMTP. On Render, missing Resend configuration now fails fast
-instead of trying blocked SMTP ports. If registration email delivery fails,
-the account remains unverified and the API returns `503`; configure Resend and
-retry registration to send a fresh code.
+Email is sent with Nodemailer over SMTP; the backend does not call an email
+provider's HTTP API. Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and
+`EMAIL_FROM` using values supplied by your SMTP host. Use a deployment host that
+allows outbound SMTP: Render blocks outbound SMTP, so registration emails will
+not send from Render. In development without SMTP credentials, OTP messages
+are printed to the backend console. In production, missing SMTP credentials
+return an explicit error instead of reporting a successful delivery.
 
 ### 4. Seed the Admin User
 Run the automated database seeder to create your initial administrator account:

@@ -1,26 +1,37 @@
+jest.mock('nodemailer', () => ({
+  createTransport: jest.fn()
+}));
+
+let nodemailer;
 const environmentKeys = [
   'NODE_ENV',
-  'RESEND_API_KEY',
   'EMAIL_FROM',
+  'SMTP_HOST',
+  'SMTP_PORT',
   'SMTP_USER',
   'SMTP_PASS',
   'RENDER',
   'RENDER_SERVICE_ID'
 ];
 const originalEnvironment = {};
-let originalFetch;
 
 describe('email delivery configuration', () => {
   beforeEach(() => {
     environmentKeys.forEach((key) => {
       originalEnvironment[key] = process.env[key];
     });
-    originalFetch = global.fetch;
     process.env.NODE_ENV = 'test';
-    process.env.RESEND_API_KEY = 're_test_key';
+    process.env.SMTP_HOST = 'smtp.example.com';
+    process.env.SMTP_PORT = '587';
+    process.env.SMTP_USER = 'smtp-user';
+    process.env.SMTP_PASS = 'smtp-password';
     process.env.EMAIL_FROM = 'Store <mail@example.com>';
-    global.fetch = jest.fn();
     jest.resetModules();
+    nodemailer = require('nodemailer');
+    nodemailer.createTransport.mockReset();
+    nodemailer.createTransport.mockReturnValue({
+      sendMail: jest.fn().mockResolvedValue({ messageId: 'smtp_123' })
+    });
   });
 
   afterEach(() => {
@@ -31,79 +42,47 @@ describe('email delivery configuration', () => {
         process.env[key] = originalEnvironment[key];
       }
     });
-    global.fetch = originalFetch;
   });
 
-  it('sends email through Resend over HTTPS', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ id: 'email_123' })
-    });
+  it('sends email through the configured SMTP transporter', async () => {
     const mailer = require('../config/mailer');
+    const message = {
+      from: 'Store <mail@example.com>',
+      to: 'customer@example.com',
+      subject: 'Verify your email',
+      text: 'Your code is 123456',
+      html: '<p>Your code is 123456</p>'
+    };
 
-    await expect(
-      mailer.sendMail({
-        from: 'Store <mail@example.com>',
-        to: 'customer@example.com',
-        subject: 'Verify your email',
-        text: 'Your code is 123456',
-        html: '<p>Your code is 123456</p>'
-      })
-    ).resolves.toEqual({ messageId: 'email_123' });
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://api.resend.com/emails',
+    await expect(mailer.sendMail(message)).resolves.toEqual({
+      messageId: 'smtp_123'
+    });
+    expect(nodemailer.createTransport).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: 'Bearer re_test_key',
-          'Content-Type': 'application/json'
-        }),
-        body: JSON.stringify({
-          from: 'Store <mail@example.com>',
-          to: ['customer@example.com'],
-          subject: 'Verify your email',
-          text: 'Your code is 123456',
-          html: '<p>Your code is 123456</p>'
-        })
+        host: 'smtp.example.com',
+        port: 587,
+        secure: false,
+        auth: { user: 'smtp-user', pass: 'smtp-password' }
       })
     );
+    expect(nodemailer.createTransport.mock.results[0].value.sendMail)
+      .toHaveBeenCalledWith(message);
   });
 
-  it('surfaces Resend API errors to the caller', async () => {
-    global.fetch.mockResolvedValue({
-      ok: false,
-      status: 401,
-      text: async () => JSON.stringify({ message: 'Invalid API key' })
-    });
-    const mailer = require('../config/mailer');
-
-    await expect(
-      mailer.sendMail({
-        from: 'Store <mail@example.com>',
-        to: 'customer@example.com',
-        subject: 'Verify your email'
-      })
-    ).rejects.toThrow('Resend API request failed (401): Invalid API key');
-  });
-
-  it('fails explicitly in production when no mail provider is configured', () => {
+  it('requires SMTP credentials in production', () => {
     process.env.NODE_ENV = 'production';
-    process.env.RESEND_API_KEY = '';
     process.env.SMTP_USER = '';
     process.env.SMTP_PASS = '';
     jest.resetModules();
     const mailer = require('../config/mailer');
 
     expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
-      'Email delivery is not configured'
+      'Email delivery is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and EMAIL_FROM.'
     );
   });
 
-  it('does not try SMTP on Render, even when SMTP credentials are present', () => {
+  it('reports blocked SMTP on Render when credentials are present', () => {
     process.env.NODE_ENV = 'production';
-    process.env.RESEND_API_KEY = '';
     process.env.SMTP_USER = 'smtp-user';
     process.env.SMTP_PASS = 'smtp-password';
     process.env.RENDER = 'true';
@@ -113,6 +92,5 @@ describe('email delivery configuration', () => {
     expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
       'Render blocks outbound SMTP'
     );
-    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
