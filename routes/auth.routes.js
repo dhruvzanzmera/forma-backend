@@ -19,7 +19,8 @@ router.post('/verify-otp', validate(verifyOtpValidator), authController.verifyOt
 router.post('/resend-otp', validate(resendOtpValidator), authController.resendOtp);
 router.post('/login', validate(loginValidator), authController.login);
 router.post('/forgot-password', validate(forgotPasswordValidator), authController.forgotPassword);
-router.post('/reset-password', validate(resetPasswordValidator), authController.resetPassword);
+router.post('/verify-reset-otp', validate(verifyOtpValidator), authController.verifyPasswordResetOtp);
+router.post('/reset-password/:resetId', validate(resetPasswordValidator), authController.resetPassword);
 
 // Authenticated auth routes
 router.post('/change-password', protect, validate(changePasswordValidator), authController.changePassword);

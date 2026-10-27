@@ -19,13 +19,26 @@ const smtpTransporter =
 
 module.exports = {
   sendMail(options) {
+    const host = config.email.host.toLowerCase();
+    const isGmailSmtpHost =
+      host === 'gmail.com' ||
+      host.endsWith('.gmail.com') ||
+      host === 'googlemail.com' ||
+      host.endsWith('.googlemail.com');
+
+    if (config.isRender && isGmailSmtpHost) {
+      throw new Error(
+        'Gmail SMTP cannot send from Render: Render blocks Gmail SMTP ports 465 and 587, and Gmail does not support port 2525. Use an SMTP relay that supports port 2525, or host the backend on a platform that permits Gmail SMTP.'
+      );
+    }
+
     if (smtpTransporter) {
       return smtpTransporter.sendMail(options);
     }
 
-    if (config.env === 'production') {
+    if (config.env === 'production' || config.isRender) {
       throw new Error(
-        'Email delivery is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and EMAIL_FROM.'
+        'Email delivery is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and EMAIL_FROM. On Render, use an SMTP provider and port that Render allows, such as port 2525 when supported by your provider.'
       );
     }
 

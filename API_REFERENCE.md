@@ -182,15 +182,36 @@ Base URL: `http://localhost:5000/api/v1`
 
 ---
 
-### Reset Password (Verify OTP + Set New Password)
+### Verify Password Reset OTP
 - **Method**: `POST`
-- **URL**: `/auth/reset-password`
+- **URL**: `/auth/verify-reset-otp`
 - **Auth**: None
 - **Request Body**:
 ```json
 {
   "email": "johndoe@example.com",
-  "otp": "654321",
+  "otp": "654321"
+}
+```
+- **Response (200 OK)**:
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "OTP verified. Use the reset ID to set a new password.",
+  "data": {
+    "resetId": "a 64-character one-time reset ID"
+  }
+}
+```
+
+### Reset Password
+- **Method**: `POST`
+- **URL**: `/auth/reset-password/:resetId`
+- **Auth**: None
+- **Request Body**:
+```json
+{
   "newPassword": "NewStrongPassword@123"
 }
 ```
@@ -202,6 +223,7 @@ Base URL: `http://localhost:5000/api/v1`
   "message": "Password has been reset successfully. You can now log in with your new password."
 }
 ```
+The reset ID is returned only after OTP verification, expires after the configured OTP lifetime, and can be used once.
 
 ---
 

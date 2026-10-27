@@ -110,15 +110,27 @@
           }
         },
         {
+          "name": "Verify Password Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/verify-reset-otp", "host": ["{{baseUrl}}"], "path": ["auth", "verify-reset-otp"] }
+          }
+        },
+        {
           "name": "Reset Password",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+              "raw": "{\n  \"newPassword\": \"NewPassword@123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] }
+            "url": { "raw": "{{baseUrl}}/auth/reset-password/{{resetId}}", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password", "{{resetId}}"] }
           }
         },
         {

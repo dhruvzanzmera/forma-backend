@@ -81,8 +81,38 @@ describe('email delivery configuration', () => {
     );
   });
 
+  it('does not use the console fallback on Render when NODE_ENV is not production', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.SMTP_HOST = '';
+    process.env.RENDER_SERVICE_ID = 'srv-test';
+    jest.resetModules();
+    const mailer = require('../config/mailer');
+
+    expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
+      'Email delivery is not configured.'
+    );
+  });
+
+  it('explains that Gmail SMTP cannot be used from Render', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.SMTP_HOST = 'smtp.gmail.com';
+    process.env.SMTP_PORT = '2525';
+    process.env.RENDER_SERVICE_ID = 'srv-test';
+    jest.resetModules();
+    nodemailer = require('nodemailer');
+    const sendMail = jest.fn();
+    nodemailer.createTransport.mockReturnValue({ sendMail });
+    const mailer = require('../config/mailer');
+
+    expect(() => mailer.sendMail({ to: 'customer@example.com' })).toThrow(
+      'Gmail SMTP cannot send from Render'
+    );
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
   it('attempts the configured SMTP delivery on Render', async () => {
     process.env.NODE_ENV = 'production';
+    process.env.SMTP_HOST = 'smtp.example.com';
     process.env.SMTP_USER = 'smtp-user';
     process.env.SMTP_PASS = 'smtp-password';
     process.env.RENDER = 'true';

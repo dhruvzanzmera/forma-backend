@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 const registerValidator = [
   body('name')
@@ -78,21 +78,11 @@ const forgotPasswordValidator = [
 ];
 
 const resetPasswordValidator = [
-  body('email')
-    .trim()
-    .notEmpty()
-    .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Please provide a valid email address')
-    .normalizeEmail(),
-  body('otp')
-    .trim()
-    .notEmpty()
-    .withMessage('OTP is required')
-    .isLength({ min: 6, max: 6 })
-    .withMessage('OTP must be 6 digits')
-    .isNumeric()
-    .withMessage('OTP must be numeric'),
+  param('resetId')
+    .isHexadecimal()
+    .withMessage('Reset ID must be a valid reset ID')
+    .isLength({ min: 64, max: 64 })
+    .withMessage('Reset ID must be a valid reset ID'),
   body('newPassword')
     .notEmpty()
     .withMessage('New password is required')

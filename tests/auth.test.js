@@ -54,4 +54,23 @@ describe('Auth Validation & Security Suite', () => {
     expect(res.statusCode).toBe(400);
     expect(res.body.success).toBe(false);
   });
+
+  it('POST /api/v1/auth/verify-reset-otp should require a valid email and OTP', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/verify-reset-otp')
+      .send({});
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(Array.isArray(res.body.errors)).toBe(true);
+  });
+
+  it('POST /api/v1/auth/reset-password/:resetId should validate the reset ID and new password', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/reset-password/not-a-reset-id')
+      .send({ newPassword: 'NewPassword@123' });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
 });

@@ -121,15 +121,27 @@ Key environment variables:
 ### Email delivery
 
 Email is sent with Nodemailer over SMTP; the backend does not call an email
-provider's HTTP API. Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and
-`EMAIL_FROM` in the Render service environment using the values supplied by your
-SMTP host. Render blocks the standard SMTP ports 25, 465, and 587; Gmail's SMTP
-port 465 will not work from Render. Use an SMTP host that supports port 2525,
-which Render permits, and configure that host's SMTP credentials. Port 2525
-uses STARTTLS when supported by the provider. In development without SMTP
-credentials, OTP messages are printed to the backend console. In production,
-missing SMTP credentials return an explicit error instead of reporting a
-successful delivery.
+provider's HTTP API. For local delivery, set `SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USER`, `SMTP_PASS`, and `EMAIL_FROM` in `Backend/.env` (or use the local
+console fallback, which prints the OTP instead of sending an email).
+
+For Render, set all five SMTP variables in the backend service's **Environment**
+settings, using the exact host, port, username, password, and verified sender
+address supplied by your email provider. Do not rely on `Backend/.env.production`
+being present on Render. Render blocks outbound SMTP on ports 25, 465, and 587,
+so those ports (including Gmail SMTP) will time out. Gmail does not provide SMTP
+on port `2525`, so setting `SMTP_PORT=2525` while keeping a Gmail SMTP host will
+not work either. Use an SMTP relay that explicitly supports port `2525`, set
+`SMTP_HOST`, `SMTP_USER`, and `SMTP_PASS` to that relay's SMTP credentials, and
+use a sender address it permits. This remains SMTP delivery; it does not require
+an email-provider HTTP API. Alternatively, host the backend on a platform that
+allows outbound Gmail SMTP. A timeout usually means the host/port is unreachable
+or blocked; authentication and sender errors are different failures.
+
+The application keeps console fallback local-only: missing SMTP credentials on
+Render or in production are reported as an error rather than pretending that
+email was sent. SMTP connection, greeting, and socket timeouts are bounded so
+failed delivery does not hang registration indefinitely.
 
 ### 4. Seed the Admin User
 Run the automated database seeder to create your initial administrator account:

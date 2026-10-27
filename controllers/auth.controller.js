@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const User = require('../models/user.model');
 const ApiError = require('../utils/apiError');
 const ApiResponse = require('../utils/apiResponse');
@@ -54,9 +55,12 @@ const register = asyncHandler(async (req, res) => {
   try {
     await MailService.sendVerificationOtp(user.email, user.name, plainOtp);
   } catch (error) {
-    console.error(`[Mail Error] Registration verification delivery failed: ${error.message}`);
+    const errorCode = error.code ? ` (${error.code})` : '';
+    console.error(
+      `[Mail Error] Registration verification delivery failed${errorCode}: ${error.message}`
+    );
     throw ApiError.serviceUnavailable(
-      'Your account was saved, but the SMTP server could not accept the verification email. Check the backend logs and SMTP host, port, credentials, and sender settings, then retry registration.'
+      'Your account was saved, but the verification email could not be sent. Check the backend logs and your SMTP provider settings, then retry registration.'
     );
   }
 
@@ -244,18 +248,23 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const hashedOtp = await hashOtp(plainOtp);
   const otpExpiresAt = getOtpExpiryDate(config.business.otpExpireMinutes);
 
+  try {
+    await MailService.sendPasswordResetOtp(user.email, user.name, plainOtp);
+  } catch (error) {
+    const errorCode = error.code ? ` (${error.code})` : '';
+    console.error(`[Mail Error] Forgot password OTP failed${errorCode}: ${error.message}`);
+    throw ApiError.serviceUnavailable(
+      'Unable to send a password reset OTP right now. Please try again later.'
+    );
+  }
+
   user.otp = {
     code: hashedOtp,
     expiresAt: otpExpiresAt,
     type: OtpType.PASSWORD_RESET,
     lastSentAt: new Date()
   };
-
   await user.save();
-
-  MailService.sendPasswordResetOtp(user.email, user.name, plainOtp).catch((err) =>
-    console.error('[Mail Error] Forgot password OTP failed:', err.message)
-  );
 
   return ApiResponse.success(
     res,
@@ -265,13 +274,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 /**
- * Reset Password with OTP
- * Route: POST /api/v1/auth/reset-password
+ * Verify Password Reset OTP
+ * Route: POST /api/v1/auth/verify-reset-otp
  */
-const resetPassword = asyncHandler(async (req, res) => {
-  const { email, otp, newPassword } = req.body;
+const verifyPasswordResetOtp = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
 
-  const user = await User.findOne({ email }).select('+password +otp.code +otp.expiresAt +otp.type');
+  const user = await User.findOne({ email }).select('+otp.code +otp.expiresAt +otp.type');
   if (!user) {
     throw ApiError.badRequest('Invalid password reset request.');
   }
@@ -289,7 +298,38 @@ const resetPassword = asyncHandler(async (req, res) => {
     throw ApiError.badRequest('Invalid OTP code.');
   }
 
-  // Update password and clear OTP
+  const resetId = crypto.randomBytes(32).toString('hex');
+  user.otp = {
+    resetTokenHash: crypto.createHash('sha256').update(resetId).digest('hex'),
+    resetTokenExpiresAt: getOtpExpiryDate(config.business.otpExpireMinutes)
+  };
+  await user.save();
+
+  return ApiResponse.success(
+    res,
+    { resetId },
+    'OTP verified. Use the reset ID to set a new password.'
+  );
+});
+
+/**
+ * Reset Password with a verified, one-time reset ID
+ * Route: POST /api/v1/auth/reset-password/:resetId
+ */
+const resetPassword = asyncHandler(async (req, res) => {
+  const { resetId } = req.params;
+  const { newPassword } = req.body;
+  const resetTokenHash = crypto.createHash('sha256').update(resetId).digest('hex');
+
+  const user = await User.findOne({
+    'otp.resetTokenHash': resetTokenHash,
+    'otp.resetTokenExpiresAt': { $gt: new Date() }
+  }).select('+otp.resetTokenHash +otp.resetTokenExpiresAt');
+
+  if (!user) {
+    throw ApiError.badRequest('Invalid or expired password reset ID. Please verify your OTP again.');
+  }
+
   user.password = newPassword;
   user.otp = undefined;
   await user.save();
@@ -350,6 +390,7 @@ module.exports = {
   resendOtp,
   login,
   forgotPassword,
+  verifyPasswordResetOtp,
   resetPassword,
   changePassword,
   logout

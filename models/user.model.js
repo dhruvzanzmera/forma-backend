@@ -51,7 +51,9 @@ const userSchema = new mongoose.Schema(
       code: { type: String, select: false },
       expiresAt: { type: Date, select: false },
       type: { type: String, enum: Object.values(OtpType), select: false },
-      lastSentAt: { type: Date, select: false }
+      lastSentAt: { type: Date, select: false },
+      resetTokenHash: { type: String, select: false },
+      resetTokenExpiresAt: { type: Date, select: false }
     }
   },
   {
